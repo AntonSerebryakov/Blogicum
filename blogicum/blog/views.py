@@ -1,4 +1,3 @@
-from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.models import User
 from django.contrib.auth.forms import UserChangeForm
 from django.contrib.auth.decorators import login_required
@@ -94,7 +93,7 @@ def category_posts(request, category_slug):
 
 
 def create(request, post_id=None):
-    
+
     if post_id is not None:
         instance = get_object_or_404(Post, pk=post_id)
         if instance.author != request.user:
