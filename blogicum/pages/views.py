@@ -7,4 +7,3 @@ class About(TemplateView):
 
 class Rules(TemplateView):
     template_name = 'pages/rules.html'
-
