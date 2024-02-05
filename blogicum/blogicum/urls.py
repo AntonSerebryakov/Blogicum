@@ -11,7 +11,6 @@ from django.urls import include, path, reverse_lazy
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('pages/', include('pages.urls')),
-    path('', include('blog.urls')),
     path(
         'auth/registration/',
         CreateView.as_view(
@@ -22,6 +21,7 @@ urlpatterns = [
         name='registration',
     ),
     path('auth/', include('django.contrib.auth.urls')),
+    path('', include('blog.urls')),
 
 
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
@@ -29,9 +29,8 @@ urlpatterns = [
 
 if settings.DEBUG:
     import debug_toolbar
-    # Добавить к списку urlpatterns список адресов из приложения debug_toolbar:
     urlpatterns += (path('__debug__/', include(debug_toolbar.urls)),)
 
 
-handler404 = 'core.views.page_not_found'
-handler500 = 'core.views.server_error'
+handler404 = 'pages.views.page_not_found'
+handler500 = 'pages.views.server_error'
