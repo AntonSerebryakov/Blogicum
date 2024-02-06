@@ -4,8 +4,8 @@ from django.http import Http404
 from django.shortcuts import get_object_or_404, render, redirect
 from django.utils import timezone
 
-from blog.models import Comment,Category, Post
-from blog.forms import  CustomUserChangeForm, CommentForm, PostForm
+from blog.models import Comment, Category, Post
+from blog.forms import CustomUserChangeForm, CommentForm, PostForm
 from blog.utils import base_queryset, paginator_page_obj
 
 
