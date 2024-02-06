@@ -2,7 +2,6 @@ from django.db import models
 from django.contrib.auth.models import User
 from django.contrib.auth import get_user_model
 
-
 from core.models import PublishedModel
 
 TITLE_MAX_LENGTH = 256
@@ -109,7 +108,21 @@ class Comment(models.Model):
         related_name='comments',
     )
     created_at = models.DateTimeField(auto_now_add=True)
-    author = models.ForeignKey(User, on_delete=models.CASCADE)
+    author = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='comment_author',
+    )
+
+    def __str__(self):
+        return (
+            f'Комментарий {self.text[:14]}, '
+            f'к посту id{self.post__pk}, '
+            f'автор комментария {self.author}, '
+        )
 
     class Meta:
+        verbose_name = 'комментарий'
+        verbose_name_plural = 'Комментарии'
+        default_related_name = 'comments'
         ordering = ('created_at',)

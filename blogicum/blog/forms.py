@@ -8,7 +8,7 @@ from blog.models import Post, Comment
 class PostForm(forms.ModelForm):
     class Meta:
         model = Post
-        exclude = ('author', 'is_published',)
+        exclude = ('author',)
 
 
 class CommentForm(forms.ModelForm):
