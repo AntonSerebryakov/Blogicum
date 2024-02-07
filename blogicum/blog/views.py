@@ -1,16 +1,28 @@
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
+from django.contrib.auth.forms import UserCreationForm
 from django.http import Http404
 from django.shortcuts import get_object_or_404, render, redirect
+from django.urls import reverse_lazy
 from django.utils import timezone
+from django.views.generic.edit import CreateView
 
 from blog.models import Comment, Category, Post
 from blog.forms import CustomUserChangeForm, CommentForm, PostForm
-from blog.utils import base_queryset, paginator_page_obj
+from blog.pagination import paginator_page_obj
+from blog.querytool import base_queryset
+
+
+class UserRegistration(CreateView):
+    form_class = UserCreationForm
+    template_name = 'registration/registration_form.html'
+    success_url = reverse_lazy('blog:index')
 
 
 def index(request):
-    posts = base_queryset(comment_count_annotate=True).order_by('-pub_date')
+    posts = base_queryset(
+        comment_count_annotate=True,
+        order_by_pub_date_rev=True)
     return render(
         request, 'blog/index.html',
         {'page_obj': paginator_page_obj(posts, request.GET.get('page'))}
@@ -18,12 +30,11 @@ def index(request):
 
 
 def post_detail(request, post_id):
-    post = get_object_or_404(base_queryset(author_request=True), pk=post_id)
-    if post.author != request.user:
-        if (not post.is_published) or (
-            not post.category.is_published) or (
-                post.pub_date > timezone.now()):
-            raise Http404
+    post = get_object_or_404(base_queryset(publicated_only=False), pk=post_id)
+    if (post.author != request.user) and ((not post.is_published) or (
+        not post.category.is_published) or (
+            post.pub_date > timezone.now())):
+        raise Http404
     context = {'post': post}
     context['form'] = CommentForm()
     context['comments'] = post.comments.all()
@@ -64,8 +75,10 @@ def category_posts(request, category_slug):
         slug=category_slug,
         is_published=True
     )
-    posts = base_queryset(comment_count_annotate=True).filter(
-        category__slug=category_slug).order_by('-pub_date')
+    posts = base_queryset(
+        model_manager=category.posts,
+        comment_count_annotate=True,
+        order_by_pub_date_rev=True)
     return render(request, 'blog/category.html',
                   {'category': category,
                    'page_obj': paginator_page_obj(
@@ -88,7 +101,7 @@ def create_post(request):
 @login_required
 def edit_post(request, post_id):
     instance = get_object_or_404(
-        base_queryset(author_request=True), pk=post_id)
+        base_queryset(publicated_only=False), pk=post_id)
     if instance.author != request.user:
         return redirect('blog:post_detail', post_id)
     form = PostForm(request.POST or None,
@@ -103,7 +116,7 @@ def edit_post(request, post_id):
 @login_required
 def delete_post(request, post_id):
     instance = get_object_or_404(
-        base_queryset(author_request=True), pk=post_id, author=request.user)
+        base_queryset(publicated_only=False), pk=post_id, author=request.user)
     form = PostForm(instance=instance)
     context = {'form': form}
     if request.method == 'POST':
@@ -117,12 +130,15 @@ def user_profile(request, username):
     context = {'profile': user}
     if user == request.user:
         posts = base_queryset(
-            author_request=True,
-            comment_count_annotate=True).order_by(
-                '-pub_date').filter(author__username=username)
+            model_manager=user.posts,
+            publicated_only=False,
+            comment_count_annotate=True,
+            order_by_pub_date_rev=True)
     else:
-        posts = base_queryset(comment_count_annotate=True).order_by(
-            '-pub_date').filter(author__username=username)
+        posts = base_queryset(
+            model_manager=user.posts,
+            comment_count_annotate=True,
+            order_by_pub_date_rev=True)
     context['page_obj'] = paginator_page_obj(posts, request.GET.get('page'))
     return render(request, 'blog/profile.html', context)
 
